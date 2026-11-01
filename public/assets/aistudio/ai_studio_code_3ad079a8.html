@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#080B10">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Luna AI Studio - Cyber Avatar Engine</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        void: '#080B10',
+                        neon: {
+                            violet: '#7C3AED',
+                            glow: '#A855F7',
+                            cyan: '#06B6D4'
+                        }
+                    },
+                    boxShadow: {
+                        'neon-violet': '0 0 25px -5px rgba(124, 58, 237, 0.5)',
+                        'neon-glow': '0 0 35px -5px rgba(168, 85, 247, 0.4)',
+                        'inner-glass': 'inset 0 1px 1px 0 rgba(255, 255, 255, 0.15)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Optimización de scroll táctil y safe areas para Android */
+        body {
+            background-color: #080B10;
+            color: #E2E8F0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: rgba(14, 19, 31, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-input {
+            background: rgba(8, 11, 16, 0.75);
+            border: 1px solid rgba(124, 58, 237, 0.25);
+            backdrop-filter: blur(8px);
+        }
+
+        .glass-input:focus {
+            border-color: #7C3AED;
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.35);
+        }
+
+        /* Ocultar barra de scroll estándar en UI móvil */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Efecto de escaneo dinámico durante carga */
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(1000%); }
+        }
+        .animate-scan {
+            animation: scanline 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-24 overflow-x-hidden antialiased selection:bg-purple-900 selection:text-white">
+
+    <!-- Top Status Bar & App Header -->
+    <header class="sticky top-0 z-40 glass-panel border-b border-white/5 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-700 via-indigo-600 to-fuchsia-500 flex items-center justify-center shadow-neon-violet">
+                <i data-lucide="sparkles" class="w-4 h-4 text-white"></i>
+            </div>
+            <div>
+                <h1 class="font-extrabold text-base tracking-wider bg-gradient-to-r from-white via-purple-200 to-purple-400 bg-clip-text text-transparent">LUNA STUDIO</h1>
+                <p class="text-[9px] uppercase tracking-widest text-purple-400 font-semibold flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> FLUX.1 Engine Activo
+                </p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="randomizePrompt()" class="px-2.5 py-1.5 text-xs font-medium rounded-lg glass-panel hover:border-purple-500/50 text-slate-300 active:scale-95 transition-all flex items-center gap-1">
+                <i data-lucide="dices" class="w-3.5 h-3.5 text-purple-400"></i>
+                <span class="text-[11px]">Azar</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="p-4 max-w-md mx-auto space-y-5">
+
+        <!-- VIEW 1: CREATOR TAB -->
+        <section id="view-creator" class="space-y-4">
+            
+            <!-- Result Display / Preview Screen -->
+            <div class="relative w-full aspect-[9/16] max-h-[460px] rounded-2xl overflow-hidden glass-panel border border-purple-500/20 shadow-2xl flex items-center justify-center group bg-black/40">
+                
+                <!-- Loading State Overlay -->
+                <div id="loader" class="absolute inset-0 z-20 flex-col items-center justify-center bg-black/85 backdrop-blur-md hidden">
+                    <div class="relative w-20 h-20 flex items-center justify-center">
+                        <div class="absolute inset-0 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
+                        <div class="absolute inset-2 border-2 border-indigo-500/20 border-b-indigo-400 rounded-full animate-spin" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
+                        <i data-lucide="cpu" class="w-8 h-8 text-purple-400 animate-pulse"></i>
+                    </div>
+                    <p class="text-xs font-semibold tracking-widest uppercase mt-4 text-purple-300">Sintetizando...</p>
+                    <p class="text-[10px] text-slate-400 mt-1">FLUX Neural Matrix Rendering</p>
+                    <div class="w-48 h-1 bg-white/10 rounded-full mt-3 overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-purple-600 via-fuchsia-400 to-indigo-500 animate-pulse w-full"></div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="text-center px-6">
+                    <div class="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 mx-auto flex items-center justify-center mb-3 text-purple-400/80 shadow-inner-glass">
+                        <i data-lucide="wand-2" class="w-8 h-8"></i>
+                    </div>
+                    <p class="text-sm font-medium text-slate-300">Configura los parámetros del avatar</p>
+                    <p class="text-[11px] text-slate-500 mt-1">Presiona "Generar con IA" para renderizar la imagen.</p>
+                </div>
+
+                <!-- Generated Image -->
+                <img id="generated-image" src="" alt="Avatar Generado" class="w-full h-full object-cover hidden transition-all duration-500">
+
+                <!-- Image Quick Actions (Float) -->
+                <div id="image-actions" class="absolute bottom-3 inset-x-3 z-10 flex gap-2 justify-between hidden">
+                    <button onclick="openModalCurrent()" class="flex-1 py-2 px-3 bg-black/60 backdrop-blur-md border border-white/10 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 text-white active:scale-95 transition-transform">
+                        <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                        <span>Inspeccionar</span>
+                    </button>
+                    <button onclick="downloadCurrentImage()" class="flex-1 py-2 px-3 bg-purple-600/80 backdrop-blur-md border border-purple-400/30 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 text-white active:scale-95 transition-transform shadow-neon-violet">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>Descargar HD</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Prompt Input Box -->
+            <div class="glass-panel rounded-2xl p-3.5 shadow-xl space-y-2 border border-white/10">
+                <div class="flex items-center justify-between text-xs font-medium text-slate-300">
+                    <span class="flex items-center gap-1.5">
+                        <i data-lucide="terminal" class="w-3.5 h-3.5 text-purple-400"></i> Descripción del sujeto
+                    </span>
+                    <button onclick="clearPrompt()" class="text-slate-500 hover:text-slate-300 text-[11px]">Limpiar</button>
+                </div>
+                <textarea id="prompt-input" rows="2" class="w-full glass-input rounded-xl p-3 text-xs text-white placeholder-slate-500 resize-none focus:outline-none transition-all" placeholder="Ej: Cyberpunk synthetic model, robotic joints, sharp eyes, silver braided hair..."></textarea>
+            </div>
+
+            <!-- Advanced Configuration Controls Accordion / Panel -->
+            <div class="glass-panel rounded-2xl p-4 shadow-xl space-y-4">
+                
+                <!-- Style Selector -->
+                <div>
+                    <label class="text-[11px] font-bold uppercase tracking-wider text-purple-300 mb-2 flex items-center gap-1.5">
+                        <i data-lucide="palette" class="w-3.5 h-3.5"></i> Tipo de Avatar / Estilo
+                    </label>
+                    <div class="grid grid-cols-2 gap-2" id="style-options">
+                        <button type="button" onclick="selectChip(this, 'style')" data-val="synthetic full body, android biomechanical model, highly intricate, hyperrealistic, octane render" class="chip active-chip py-2 px-3 text-left rounded-xl glass-input text-xs font-medium border border-purple-500 text-purple-300 bg-purple-950/30 transition-all flex items-center justify-between">
+                            <span>Cuerpo Sintético</span>
+                            <i data-lucide="check" class="w-3.5 h-3.5 text-purple-400"></i>
+                        </button>
+                        <button type="button" onclick="selectChip(this, 'style')" data-val="photorealistic portrait, high fashion editorial, studio depth, 8k, pores texture, canon eos r5" class="chip py-2 px-3 text-left rounded-xl glass-input text-xs font-medium border border-white/5 text-slate-400 transition-all flex items-center justify-between">
+                            <span>Retrato Realista</span>
+                            <i data-lucide="check" class="w-3.5 h-3.5 hidden"></i>
+                        </button>
+                        <button type="button" onclick="selectChip(this, 'style')" data-val="futuristic sci-fi cyborg, gleaming chrome implants, glowing LED circuits, mecha chassis" class="chip py-2 px-3 text-left rounded-xl glass-input text-xs font-medium border border-white/5 text-slate-400 transition-all flex items-center justify-between">
+                            <span>Cyborg Sci-Fi</span>
+                            <i data-lucide="check" class="w-3.5 h-3.5 hidden"></i>
+                        </button>
+                        <button type="button" onclick="selectChip(this, 'style')" data-val="3D CGI character, pixar stylized render, unreal engine 5, raytracing, vibrant subsurface scattering" class="chip py-2 px-3 text-left rounded-xl glass-input text-xs font-medium border border-white/5 text-slate-400 transition-all flex items-center justify-between">
+                            <span>Render 3D / CGI</span>
+                            <i data-lucide="check" class="w-3.5 h-3.5 hidden"></i>
+                        </button>
+                        <button type="button" onclick="selectChip(this, 'style')" data-val="modern anime aesthetic, makoto shinkai visual vibes, sharp clean line art, masterwork" class="chip py-2 px-3 text-left rounded-xl glass-input text-xs font-medium border border-white/5 text-slate-400 transition-all flex items-center justify-between">
+                            <span>Anime Master</span>
+                            <i data-lucide="check" class="w-3.5 h-3.5 hidden"></i>
+                        </button>
+                        <button type="button" onclick="selectChip(this, 'style')" data-val="dark epic fantasy, mystical rune tattoos, ornate armor, ethereal particles, artstation" class="chip py-2 px-3 text-left rounded-xl glass-input text-xs font-medium border border-white/5 text-slate-400 transition-all flex items-center justify-between">
+                            <span>Fantasía Épica</span>
+                            <i data-lucide="check" class="w-3.5 h-3.5 hidden"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Framing & Camera Angle -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[11px] font-bold uppercase tracking-wider text-purple-300 mb-1.5 flex items-center gap-1">
+                            <i data-lucide="camera" class="w-3 h-3"></i> Encuadre
+                        </label>
+                        <select id="framing-select" class="w-full glass-input rounded-xl p-2.5 text-xs text-slate-200 outline-none">
+                            <option value="full body shot, standing posed, head to toe visible">Cuerpo Completo</option>
+                            <option value="medium shot, waist up composition, balanced posture">Plano Medio</option>
+                            <option value="extreme close-up face portrait, sharp eye focus">Primer Plano</option>
+                            <option value="dramatic low angle worm's-eye view, imposing perspective">Contrapicado</option>
+                        </select>
+                    </div>
+
+                    <!-- Lighting -->
+                    <div>
+                        <label class="text-[11px] font-bold uppercase tracking-wider text-purple-300 mb-1.5 flex items-center gap-1">
+                            <i data-lucide="sun" class="w-3 h-3"></i> Iluminación
+                        </label>
+                        <select id="lighting-select" class="w-full glass-input rounded-xl p-2.5 text-xs text-slate-200 outline-none">
+                            <option value="cyberpunk dual neon violet and cyan rim lighting, volumetric glow">Neón Cyberpunk</option>
+                            <option value="studio softbox high-end lighting, neutral soft shadows">Estudio Softbox</option>
+                            <option value="warm cinematic golden hour sunlight, lens flare">Hora Dorada</option>
+                            <option value="dramatic baroque chiaroscuro, intense shadows, rembrandt lighting">Claroscuro</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Aspect Ratio Selector -->
+                <div>
+                    <label class="text-[11px] font-bold uppercase tracking-wider text-purple-300 mb-1.5 block">Proporción de Pantalla</label>
+                    <div class="grid grid-cols-3 gap-2" id="ratio-selector">
+                        <button type="button" onclick="setRatio('9:16', 720, 1280, this)" class="ratio-btn active-ratio py-2 rounded-xl glass-input text-xs font-semibold text-center border-purple-500 text-purple-300 bg-purple-950/40">
+                            9:16 <span class="block text-[9px] text-slate-400 font-normal">Vertical</span>
+                        </button>
+                        <button type="button" onclick="setRatio('1:1', 1024, 1024, this)" class="ratio-btn py-2 rounded-xl glass-input text-xs font-semibold text-center border-white/5 text-slate-400">
+                            1:1 <span class="block text-[9px] text-slate-500 font-normal">Cuadrado</span>
+                        </button>
+                        <button type="button" onclick="setRatio('16:9', 1280, 720, this)" class="ratio-btn py-2 rounded-xl glass-input text-xs font-semibold text-center border-white/5 text-slate-400">
+                            16:9 <span class="block text-[9px] text-slate-500 font-normal">Cine</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button (Sticky Trigger) -->
+            <button id="btn-generate" onclick="generateAvatar()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 font-bold text-sm text-white tracking-wider uppercase shadow-neon-violet active:scale-[0.98] transition-all flex items-center justify-center gap-2 border border-purple-400/40">
+                <i data-lucide="zap" class="w-4 h-4 fill-white"></i>
+                <span>Generar con IA (FLUX.1)</span>
+            </button>
+        </section>
+
+        <!-- VIEW 2: VAULT / GALLERY TAB -->
+        <section id="view-gallery" class="space-y-4 hidden">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                        <i data-lucide="archive" class="w-4 h-4 text-purple-400"></i> Galería Local
+                    </h2>
+                    <p class="text-[11px] text-slate-400" id="gallery-count">0 Creaciones guardadas</p>
+                </div>
+                <button onclick="clearEntireGallery()" class="text-xs text-rose-400 hover:text-rose-300 font-medium px-2 py-1 bg-rose-950/20 rounded-lg border border-rose-900/40">
+                    Vaciar
+                </button>
+            </div>
+
+            <!-- Grid of creations -->
+            <div id="gallery-grid" class="grid grid-cols-2 gap-3 min-h-[300px]">
+                <!-- Dynamic cards populated via JavaScript -->
+            </div>
+
+            <!-- Empty Gallery View -->
+            <div id="gallery-empty" class="text-center py-16 hidden">
+                <i data-lucide="images" class="w-12 h-12 text-slate-600 mx-auto mb-2"></i>
+                <p class="text-sm font-medium text-slate-400">Tu bóveda está vacía</p>
+                <p class="text-xs text-slate-600 mt-1">Todas las imágenes que generes se guardarán automáticamente aquí.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Lightbox Modal for Inspection -->
+    <div id="lightbox-modal" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl hidden flex-col justify-between p-4 transition-opacity">
+        <div class="flex items-center justify-between pt-2">
+            <span class="text-xs font-semibold tracking-wider uppercase text-purple-400" id="modal-date"></span>
+            <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div class="relative flex-1 my-auto flex items-center justify-center max-h-[78vh]">
+            <img id="modal-img" src="" alt="Full Avatar preview" class="max-h-full max-w-full rounded-xl object-contain shadow-2xl">
+        </div>
+
+        <div class="space-y-3 pb-2">
+            <p id="modal-prompt" class="text-xs text-slate-300 bg-white/5 p-3 rounded-xl border border-white/10 line-clamp-2 italic"></p>
+            <div class="flex gap-2">
+                <button id="modal-download" class="flex-1 py-3 bg-purple-600 rounded-xl font-semibold text-xs text-white flex items-center justify-center gap-2 shadow-neon-violet active:scale-95">
+                    <i data-lucide="download" class="w-4 h-4"></i> Guardar en Galería del Móvil
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar (Android Mobile-Optimized) -->
+    <nav class="fixed bottom-0 inset-x-0 z-40 glass-panel border-t border-white/10 px-6 py-2 pb-safe bg-[#080B10]/90">
+        <div class="max-w-md mx-auto flex items-center justify-around">
+            <button onclick="switchTab('creator')" id="nav-creator" class="nav-btn flex flex-col items-center gap-1 py-1 px-4 text-purple-400 transition-colors">
+                <i data-lucide="sparkle" class="w-5 h-5"></i>
+                <span class="text-[10px] font-bold tracking-wide">Crear</span>
+            </button>
+            <button onclick="switchTab('gallery')" id="nav-gallery" class="nav-btn flex flex-col items-center gap-1 py-1 px-4 text-slate-400 hover:text-slate-200 transition-colors">
+                <i data-lucide="image" class="w-5 h-5"></i>
+                <span class="text-[10px] font-bold tracking-wide">Galería</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Custom Notification Toast -->
+    <div id="toast" class="fixed top-16 inset-x-0 mx-auto w-max max-w-[85vw] px-4 py-2.5 rounded-full bg-purple-950/90 border border-purple-500/50 shadow-neon-violet backdrop-blur-xl text-xs text-purple-200 flex items-center gap-2 transform -translate-y-20 opacity-0 transition-all duration-300 z-50 pointer-events-none">
+        <i data-lucide="info" class="w-4 h-4 text-purple-400"></i>
+        <span id="toast-text">Mensaje</span>
+    </div>
+
+    <!-- JavaScript Application Engine -->
+    <script>
+        // Preset dimensions and application state
+        let currentDimensions = { width: 720, height: 1280, label: '9:16' };
+        let selectedStyleModifier = "synthetic full body, android biomechanical model, highly intricate, hyperrealistic, octane render";
+        let currentActiveImageUrl = "";
+        let currentPromptUsed = "";
+        const STORAGE_KEY = "LUNA_AI_VAULT_ITEMS";
+
+        // Inspirational preset prompts
+        const randomPrompts = [
+            "Femme fatale android assassin with glowing lavender irises, chrome spine plating, rainy neo-tokyo street reflection",
+            "Cyborg warrior full body render in futuristic tactical nano-suit, floating energy crystals, ultra detailed",
+            "High-fashion bio-mechanical model posing for cyberpunk vogue, carbon fiber joints, holographic jewelry",
+            "Valkyrie gynoid with feathered titanium wings, pristine porcelain mask, hyperdetailed sci-fi cathedral background",
+            "Solarpunk mechanical guardian with botanical brass gears, blooming flowers inside glass chest, vivid lighting"
+        ];
+
+        // Initialize Icons & Load Storage
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            loadGalleryFromStorage();
+        });
+
+        // Tab Switching Engine
+        function switc

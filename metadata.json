@@ -1,0 +1,6 @@
+{
+  "name": "Luna Studio",
+  "description": "Cyber Avatar Engine powered by FLUX AI image synthesis and cybernetic styling controls",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
